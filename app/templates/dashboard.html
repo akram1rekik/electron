@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sports Optimizer</title>
+    <link href="../static/css/app.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="preloader">
+	<div class="preloader-bg"></div>
+	<div class="preloader-content">
+		<div>
+			<span class="logo-main logo-preloader"></span>
+			<div class="preloader-animation"></div>
+		</div>
+	</div>
+</div>
+
+<div class="window">
+    <div id="nodataOverlay" class="dash-nodata-overlay active">
+        <div class="content">
+            <button class="ui success button rounded" 
+			data-toggle="modal" data-target="#modalBuilder" type="button"><i class="im im-tools" aria-hidden="true"></i> Build Optimizer</button>
+        </div>
+    </div>
+	
+    <div class="topbar ui level">
+        <div class="item logo-topbar"><span class="logo-main-icon"></span></div>		
+		<div class="item topbar-title"><span>Sports Optimizer</span></div>
+
+        <div class="right">
+            <a href="Dashboard.html" class="item ui button primary"><i class="im im-dashboard" aria-hidden="true"></i> Dashboard</a>
+            <a class="item" id="minimize" type="button"><i class="im im-minimize" aria-hidden="true"></i></a>
+            <a class="item maximized disabled" type="button"><i class="im im-maximize" aria-hidden="true"></i></a>
+            <a class="item" id="close" type="button"><i class="im im-x-mark" aria-hidden="true"></i></a>
+        </div>
+    </div>
+	
+	<div class="bottombar ui level">
+        <a class="item" data-toggle="modal" data-target="#modalBuilder" type="button"><i class="icimg icimg-settings" aria-hidden="true"></i><span>Build</span></a>
+		<div class="item item-spacer"></div>
+		<a class="item" type="button" onclick="deleteAll()"><i class="icimg icimg-delete" aria-hidden="true"></i><span>Delete</span></a>
+    </div>
+	
+	<div class="window-content dash-content">
+		<div class="pane">
+			<div class="scrollable">
+				<table class="optimizerlist-table ui tbl white hover">
+					<thead>
+						<tr>
+							<!-- Favorite moves optimizer to top of list -->
+							<th class="optimizerlist-favorite">Favorite</th>
+							<th class="optimizerlist-open">Open</th>							
+							<!-- Sort ascending by name -->
+							<th class="optimizerlist-name">Optimizer Name</th>		
+							<th class="optimizerlist-delete">Delete</th>
+						</tr>
+					</thead>
+					<tbody id="optimizerList">
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal" id="modalBuilder" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-header">
+				<div class="modal-title">Build Optimizer</div>
+				<button type="button" class="close" data-dismiss="modal"><i class="im im-x-mark" aria-hidden="true"></i></button>
+			</div>
+
+			<div class="modal-body">
+				<form class="builder-steps">
+					<div class="builder-tabs-container">
+
+						<div class="builder-tabs list-group">
+							<button class="btn primary builder-name"
+									id="tabStep1"
+									data-toggle="tab"
+									data-target="#step1"
+									type="button"
+									onclick="step1Click()">
+								<span>1.</span>Name
+							</button>
+							<button id="tabStep2"
+									class="btn builder-positions"
+									data-toggle="tab"
+									data-target="#step2"
+									type="button"
+									onclick="step2Click()"
+									disabled>
+								<span>2.</span>Positions
+							</button>
+							<button id="tabStep3"
+									class="btn builder-rules"
+									data-toggle="tab"
+									data-target="#step3"
+									type="button"
+									onclick="step3Click()"
+									disabled>
+								<span>3.</span>Rules
+							</button>
+						</div>
+
+						<div class="builder-tabs-content tab-content">
+							<div id="step1" class="tab-pane active">
+								<div class="modal-optimizername">
+									<div class="ui level">
+										<h5>Name <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+										data-content="This is your optimizer name"></i></h5>
+									</div>
+
+									<table class="ui tbl optimizername-table">
+										<thead>
+										<tr>
+											<th>Create Optimizer Name <span id="nameValidation">Required</span></th>
+										</tr>
+										</thead>
+										<tbody>
+										<tr>
+											<td><input id="optimizerName" class="name-optimizername" type="text" value="" placeholder="Enter Name..." oninput="validateStep1()" onClick="this.select();"/></td>
+										</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+
+							<div id="step2" class="tab-pane">
+								<div class="modal-positions">
+									<div class="ui level">
+										<h5>Positions <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+										data-content="Positions required for a single lineup"></i></h5>
+									</div>
+									
+									<ul>
+										<li>For single position enter like this <span>P</span></li>
+										<li>For flex/util like position enter like this <span>C,1B,2B,3B,SS,OF</span></li>
+									</ul>
+
+									<table class="ui tbl positions-table">
+										<thead>
+										<tr>
+											<th>Position <span id="positionsValidation">At least 1 position required</span></th>
+											<th class="right">Delete</th>
+										</tr>
+										</thead>
+										<tbody  id="positionList">
+										</tbody>
+									</table>
+
+									<div class="ui level add-position">
+										<button id="addPos" class="ui button transparent success i-left right" type="button" 
+										onclick="addPosition()"><i class="im im-plus-circle" aria-hidden="true"></i> Add Position</button>
+									</div>
+								</div>
+							</div>
+
+							<div id="step3" class="tab-pane">
+								<div class="modal-rules">
+									<div class="ui level">
+										<h5>Rules <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+										data-content="Rules required for a single lineup"></i></h5>
+									</div>
+
+									<table class="ui tbl rules-table">
+										<thead>
+										<tr>
+											<th>Rule</th>
+											<th class="right">Set</th>
+										</tr>
+										</thead>
+										<tbody>
+										<tr>
+											<td>Minimum Salary Cap <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="Minimum salary allowed for a single lineup"></i></td>
+											<td class="right">
+												<label>0 if not changed</label>
+												<input id="minSalary" class="rules-minsalary" type="number" value="0" placeholder="0" min="0" onClick="this.select();" />
+											</td>
+										</tr>
+
+										<tr>
+											<td>Maximum Salary Cap <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="Maximum salary allowed for a single lineup"></i></td>
+											<td class="right">
+												<span id="maxSalaryValidation">Required</span>
+												<input id="maxSalary" class="rules-maxsalary" type="number" value="0" placeholder="0" oninput="validateStep3()" onClick="this.select();"/>
+											</td>
+										</tr>
+
+										<tr>
+											<td>Max. Players From 1 Team <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="Maximum allowed players from a single team for a single lineup. Not all sports require team settings"></i></td>
+											<td class="right">
+												<label>0 if not needed</label>
+												<input id="maxPlayers" class="rules-maxplayers" type="number" value="0" placeholder="0" onClick="this.select();" />
+											</td>
+										</tr>
+										
+										<tr>
+											<td>Max. Players Exclude <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="Excludes selected position from max players per team count"></i></td>
+											<td class="right">
+												<label>none if not needed</label>
+												<select class="rules-maxplayers-exclude">
+													<option value="NONE">NONE</option>
+												</select>
+											</td>
+										</tr>
+
+										<tr>
+											<td>Min. different teams <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="Single lineup must have players from set minimum number of different teams. Not all sports require team settings"></i></td>
+											<td class="right">
+												<label>0 if not needed</label>
+												<input id="minTeams" class="rules-minteams" type="number" value="0" placeholder="0" onClick="this.select();" />
+											</td>
+										</tr>
+
+										<tr>
+											<td>No opponent vs <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="No opponent vs. selected position will be added to lineup"></i></td>
+											<td class="right">
+												<label>none if not needed</label>
+												<select id="noOpponent" class="rules-noopponent">
+													<option value="NONE">NONE</option>
+												</select>
+											</td>
+										</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="builder-steps-controls">
+						<button id="previousBtn" class="ui button rounded builder-previous hidden" type="button" onclick="previousStep()"><i class="im im-angle-left" aria-hidden="true"></i> Previous</button>
+						<button id="nextBtn" class="ui button rounded primary builder-next" type="button" onclick="nextStep()" disabled><i class="im im-angle-right" aria-hidden="true"></i> Next</button>
+						<button id="buildSubmit" class="ui button rounded success builder-build hidden" type="submit" onclick="buildOptimizer()" disabled><i class="im im-check-mark" aria-hidden="true"></i> Build</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+	
+</body>
+<script type="text/javascript" src="../../renderer.js"></script>
+<script type="text/javascript" src="../static/js/vendors/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="../static/js/app.js"></script>
+<script type="text/javascript" src="../static/js/builder.js"></script>
+</html>

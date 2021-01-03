@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sports Optimizer</title>
+    <link href="../static/css/app.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="preloader">
+	<div class="preloader-bg"></div>
+	<div class="preloader-content">
+		<div>
+			<span class="logo-main logo-preloader"></span>
+			<div class="preloader-animation"></div>
+		</div>
+	</div>
+</div>
+
+<div class="window">
+    <div class="topbar ui level">
+        <div class="item logo-topbar"><span class="logo-main-icon"></span></div>	
+		<div class="item topbar-title"><span class="optimizer-name"></span></div>
+
+        <div class="right">
+            <a href="Dashboard.html" class="item ui button primary"><i class="im im-dashboard" aria-hidden="true"></i> Dashboard</a>
+            <a class="item" id="minimize" type="button"><i class="im im-minimize" aria-hidden="true"></i></a>
+            <a class="item maximized disabled" type="button"><i class="im im-maximize" aria-hidden="true"></i></a>
+            <a class="item" id="close" type="button"><i class="im im-x-mark" aria-hidden="true"></i></a>
+        </div>
+    </div>
+	
+	<div class="bottombar ui level">
+		<div class="item item-grouped list-group">
+			<a class="item playerstab active" data-toggle="tab" data-target="#playerstab" type="button" 
+			onclick="clickOnPlayerStabMenu()"><i class="icimg icimg-playerpool" aria-hidden="true"></i><span>Players</span></a>	
+			
+			<a class="item lineupstab" data-toggle="tab" data-target="#lineupstab" type="button" 
+			onclick="clickOnLineupStabMenu()"><i class="icimg icimg-lineups" aria-hidden="true"></i><span>Lineups</span></a>
+		</div>			
+
+		<div class="item item-spacer"></div>
+
+		<!-- if lineupstab is active add hidden -->		
+		<div id="playerStabMenu" class="ui level item active">
+			<a class="item" data-toggle="modal" data-target="#modalSettings" type="button"><i class="icimg icimg-settings" aria-hidden="true"></i><span>Settings</span></a>
+			<a class="item" data-toggle="modal" data-target="#modalMatchData" type="button"><i class="icimg icimg-upload" aria-hidden="true"></i><span>Match Data</span></a>
+			<a class="item" data-toggle="modal" data-target="#modalPlayerData" type="button"><i class="icimg icimg-upload" aria-hidden="true"></i><span>Player Data</span></a>
+		</div>
+		
+		<!-- if playerstab is active add hidden -->
+		<div id="lineupStabMenu" class="ui level item hidden">
+			<a class="item" data-toggle="modal" data-target="#modalSettings" type="button"><i class="icimg icimg-settings" aria-hidden="true"></i><span>Settings</span></a>
+		</div>
+	</div>
+	
+	<div class="window-content">
+		<div class="pane tab-content">  
+			<section id="playerstab" class="playerpool-content content tab-pane active">	
+				<div class="playerpool-sorts ui level margin padded-bottom">
+					<div class="item item-search">
+						<div class="search ui input">
+							<input id="search-players" type="text" placeholder="Search players..." oninput="filterByName()" onClick="this.select();" />
+							<i class="search-icon im im-magnifier"></i>
+							<button id="searchByNameReset" class="clear-search hidden" type="reset" 
+							onclick="resetSearchByName()"><i class="im im-x-mark-circle-o" aria-hidden="true"></i></button>
+						</div>
+					</div>
+
+					<div id="positionTabs" class="item item-grouped position-buttons"></div>
+
+					<div class="right">
+						<div class="item item-grouped">
+							<a id="poolFilter" class="item active" type="button" 
+							onclick="clickOnPool()">My Pool<span id="poolTotal" class="tag total_my_pool">0</span></a>
+							
+							<a id="lockedFilter" class="item" type="button" 
+							onclick="clickOnLocked()">Locked<span class="tag total_locked">
+							<span id="lockedTotal" class="locked-player-count">0</span> | <span id="lockedSalaryTotal" class="locked-salary-total">0</span></span></a>
+							
+							<a id="deletedFilter" class="item" type="button" 
+							onclick="clickOnDeleted()">Removed<span id="deletedTotal" class="tag total_removed">0</span></a>
+
+							<a class="item sort-popover-trigger" type="button" 
+							data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
+								<i class="im im-angle-down" aria-hidden="true"></i>
+							</a>
+							<div class="sort-popover dropdown-menu dropdown-menu-right clearfix">
+								<div class="apply-exposure">
+									<label><i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="hover" 
+									data-content="Changes every players max exposure."></i>Global Exposure</label>
+
+									<!-- max value 100 -->
+									<div class="apply-exposure-wrap">
+										<input id="globalExposureInput" type="number" value="100" oninput="validateSetGlobalExposure()" onClick="this.select();" />
+										<button id="setGlobalExposure" class="ui button success transparent" onclick="setGlobalExposure()"><i class="im im-check-mark" aria-hidden="true"></i> Apply</button>
+									</div>
+								</div>
+
+								<hr />
+
+								<a class="item" type="button" onclick="resetFpts()"><i class="im im-reset" aria-hidden="true"></i> Reset FPTS</a>
+								<a class="item" type="button" onclick="resetExposures()"><i class="im im-reset" aria-hidden="true"></i> Reset Exposures</a>
+								<a class="item" type="button" onclick="resetLocks()"><i class="im im-reset" aria-hidden="true"></i> Reset Locks</a>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="playerpool-grid">
+					<div class="players-table ag-theme-alpine"></div>
+					<div id="emptyGrid" class="empty-players-grid hidden">
+						<div class="content">No Players Available</div>
+					</div>
+					<div id="nodataOverlay" class="playerpool-nodata-overlay">
+						<div class="content">
+							<button class="ui success button rounded" type="button" 
+							data-toggle="modal" data-target="#modalPlayerData"><i class="im im-database" aria-hidden="true"></i> Player Data</button>
+							
+							<button class="ui success button rounded" type="button" 
+							data-toggle="modal" data-target="#addPlayerModal"><i class="im im-user-male" aria-hidden="true"></i> Add Player</button>
+						</div>
+					</div>
+				</div>		
+			</section>	
+			
+			<!-- if no lineups add class no-lineups -->
+			<section id="lineupstab" class="lineups-content content tab-pane no-lineups">
+				<div class="empty-lineups-overlay">
+					<div class="content">
+						<span>No Lineups Available</span>
+					</div>
+				</div>					
+			</section>
+		</div>
+	</div>
+</div>
+
+<div class="modal" id="modalSettings" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+		<div class="modal-content">
+
+			<div class="modal-header">
+				<div class="modal-title">Settings</div>
+				<button type="button" class="close" data-dismiss="modal"><i class="im im-x-mark" aria-hidden="true"></i></button>
+			</div>
+
+			<div class="modal-body">
+				<div class="ui level padded">
+					<div class="item item-grouped list-group settings-tabs">
+						<a class="item ui button active" data-toggle="tab" data-target="#settingsGeneral" type="button">General</a>
+						<a class="item ui button" data-toggle="tab" data-target="#settingsStacksLimits" type="button">Stacks/Limits</a>
+					</div>
+
+					<div class="right">
+						<button id="saveSettingsBtn" type="button" class="item ui button rounded primary" 
+						onclick="editOptimizer()"><i class="im im-floppy-disk" aria-hidden="true"></i> Save Settings</button>
+					</div>
+				</div>
+
+				<div class="tab-content">
+					<section id="settingsGeneral" class="tab-pane active">
+						<div class="settings-container">
+							<div class="settings-item">
+								<div class="modal-optimizername">
+									<div class="ui level">
+										<h5>Name <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+										data-content="This is your optimizer name"></i></h5>
+									</div>
+
+									<table class="ui tbl optimizername-table">
+										<thead>
+										<tr>
+											<th>Optimizer Name <span id="nameValidation">Required</span></th>
+										</tr>
+										</thead>
+										<tbody>
+										<tr>
+											<td><input class="name-optimizername" type="text" value="" placeholder="Enter Name..." oninput="validateSettings()" onClick="this.select();" /></td>
+										</tr>
+										</tbody>
+									</table>
+								</div>
+
+								<div class="modal-rules">
+									<div class="ui level">
+										<h5>Rules <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+										data-content="Rules required for a single lineup"></i></h5>
+									</div>
+
+									<table class="ui tbl rules-table">
+										<thead>
+										<tr>
+											<th>Rule</th>
+											<th class="right">Set</th>
+										</tr>
+										</thead>
+										<tbody>
+										<tr>
+											<td>Minimum Salary Cap <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="Minimum salary allowed for a single lineup"></i></td>
+											<td class="right">
+												<label>0 if not changed</label>
+												<input class="rules-minsalary" type="number" value="0" placeholder="0" onClick="this.select();" />
+											</td>
+										</tr>
+
+										<tr>
+											<td>Maximum Salary Cap <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="Maximum salary allowed for a single lineup"></i></td>
+											<td class="right">
+												<span id="maxSalaryValidation">Required</span>
+												<input class="rules-maxsalary" type="number" value="0" placeholder="0" oninput="validateSettings()" onClick="this.select();" />
+											</td>
+										</tr>
+
+										<tr>
+											<td>Max. Players From 1 Team <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="Maximum allowed players from a single team for a single lineup. Not all sports require team settings"></i></td>
+											<td class="right">
+												<label>0 if not needed</label>
+												<input class="rules-maxplayers" type="number" value="0" placeholder="0" onClick="this.select();" />
+											</td>
+										</tr>
+										
+										<tr>
+											<td>Max. Players Exclude <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="Excludes selected position from max players per team count"></i></td>
+											<td class="right">
+												<label>none if not needed</label>
+												<select class="rules-maxplayers-exclude">
+													<option value="NONE">NONE</option>
+												</select>
+											</td>
+										</tr>
+
+										<tr>
+											<td>Min. different teams <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="Single lineup must have players from set minimum number of different teams. Not all sports require team settings"></i></td>
+											<td class="right">
+												<label>0 if not needed</label>
+												<input class="rules-minteams" type="number" value="0" placeholder="0" onClick="this.select();" />
+											</td>
+										</tr>
+
+										<tr>
+											<td>No opponent vs <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+											data-content="No opponent vs. selected position will be added to lineup"></i></td>
+											<td class="right">
+												<label>none if not needed</label>
+												<select class="rules-noopponent" onchange="onChangeNoOpponentSel()">
+													<option value="NONE">NONE</option>
+												</select>
+											</td>
+										</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+
+							<div class="settings-item">
+								<div class="modal-positions">
+									<div class="ui level">
+										<h5>Positions <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+										data-content="Positions required for a single lineup"></i></h5>
+
+										<div class="right add-position">
+											<button class="ui button transparent primary i-left no-padding" type="button" 
+											onclick="addPosition()"><i class="im im-plus-circle" aria-hidden="true"></i> Add Position</button>
+										</div>
+									</div>
+
+									<table class="ui tbl positions-table">
+										<thead>
+										<tr>
+											<th>Position <span id="positionsValidation">At least 1 position required</span></th>
+											<th class="right">Delete</th>
+										</tr>
+										</thead>
+										<tbody id="positionList"></tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</section>
+					
+					<section id="settingsStacksLimits" class="tab-pane">
+						<div class="settings-container">
+							<div class="settings-item">
+								<div class="modal-stackslimits modal-teamstacks">
+									<div class="ui level">
+										<h5>Team Stacks <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+										data-content="Add selected number of players from same team to show up in every single lineup. All total player counts must meet Max. Players From 1 Team and Min. Different Teams requirements. Single team stack player count will override Max. Players From 1 Team in general settings."></i></h5>
+
+										<div class="right">
+											<button class="ui button transparent primary i-left no-padding" type="button"><i class="im im-plus-circle" aria-hidden="true"></i> Add</button>
+										</div>
+									</div>
+									
+									<table class="ui tbl stackslimits-table">
+										<thead>
+											<tr>
+												<th>Team</th>												
+												<th>Players</th>
+												<th class="right">Delete</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>
+													<!-- List of all teams from main grid no duplicates, place team names in ascending order -->
+													<select>
+														<option>None</option>					
+													</select>
+												</td>
+												<td>
+													<select>
+														<option>2</option>
+														<option>3</option>
+														<option>4</option>
+													</select>
+												</td>
+												<td class="right">
+													<i class="ic-delete-1" aria-hidden="true"></i>
+												</td>
+											</tr>									
+										</tbody>
+									</table>
+								</div>
+							</div>
+							
+							<div class="settings-item">
+								<div class="modal-stackslimits modal-positionsstack">
+									<div class="ui level">
+										<h5>Positions Stack <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+										data-content="Must select 2 positions to create a position stack. Example you select QB and WR, then a QB and WR from same team will be added together in a single lineup."></i></h5>
+
+										<div class="right">
+											<button class="ui button transparent primary i-left no-padding" type="button"><i class="im im-plus-circle" aria-hidden="true"></i> Add</button>
+										</div>
+									</div>
+									
+									<table class="ui tbl stackslimits-table">
+										<thead>
+											<tr>
+												<th>Positions (2 Minimum)</th>
+												<th class="right">Delete</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>
+													<!-- 2 position minimum -->
+													<!-- List of all positions no duplicates, place positions in ascending order -->
+													<div id="positionsStack">
+														<select id="selectPositionsStack" multiple="multiple">
+															<option>A</option>			
+														</select>
+													</div>
+												</td>
+												<td class="right">
+													<i class="ic-delete-1" aria-hidden="true"></i>
+												</td>
+											</tr>									
+										</tbody>
+									</table>
+								</div>
+							</div>
+
+							<div class="settings-item">
+								<div class="modal-stackslimits modal-positionslimit">
+									<div class="ui level">
+										<h5>Position/s Limit <i class="im im-question i-info" aria-hidden="true" tabindex="0" data-toggle="popover" data-trigger="focus" 
+										data-content="Limits selected positions from same team to 1, you can select 1 position or multiple. Example if you have 2 RB's from the same team, then only 1 of those RB's will show in a single lineup."></i></h5>
+
+										<div class="right">
+											<button class="ui button transparent primary i-left no-padding" type="button"><i class="im im-plus-circle" aria-hidden="true"></i> Add</button>
+										</div>
+									</div>
+									
+									<table class="ui tbl stackslimits-table">
+										<thead>
+											<tr>
+												<th>Position/s</th>
+												<th class="right">Delete</th>
+											</tr>
+										</thead>
+										<tbody>
+											<tr>
+												<td>
+													<!-- List of all positions no duplicates, place positions in ascending order -->
+													<div id="positionsLimit">
+														<select id="selectPositionsLimit" multiple="multiple">
+															<option>A</option>			
+														</select>
+													</div>
+												</td>
+												<td class="right">
+													<i class="ic-delete-1" aria-hidden="true"></i>
+												</td>
+											</tr>									
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>				
+					</section>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal" id="modalPlayerData" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<div class="modal-title">Player Data</div>
+				<button type="button" class="close" data-dismiss="modal"><i class="im im-x-mark" aria-hidden="true"></i></button>
+			</div>
+
+			<div class="modal-body">
+				<div class="playerdata-container">
+					<ul>
+						<li><span>1.</span>
+							<button class="ui button primary transparent no-padding" onclick="downloadPlayerDataTemplate()">
+								Download .csv template
+							</button>
+						</li>
+						<li><span>2.</span> Add player data to .csv template.&ensp;
+						<span class="required">"Name"</span>&ensp;and&ensp;<span class="required">"Position"</span>&ensp;required.</li>
+						<li><span>3.</span> Save .csv template and upload here.</li>						
+					</ul>
+					
+					<ul class="template-instructions">
+						<li class="template-instructions-header">Template Instructions:</li>
+						<li class="template-instructions">"Name" and "Position" required, if not entered that player will be skipped</li>
+						<li class="template-instructions">"Team" required if player has team, "Opponent" required if player has opponent</li>
+						<li class="template-instructions">"Id" column is used to export lineups to fantasy site, id's must match those for specific contest times</li>
+						<li class="template-instructions">Any column not required left blank will use default values</li>
+						<li class="template-instructions">If csv is uploaded and player data is already present the player data will be matched and updated with any changes</li>						
+					</ul>
+
+					<form>
+						<div class="ui form">
+							<div class="field upload-csv-file">
+								<label>UPLOAD CSV TEMPLATE</label>
+								<input id="csvUploadInput" type="file" onchange="uploadCsv(this.files[0])">
+							</div>
+
+							<button id="submitCsvData" class="ui button rounded primary disabled" type="button" 
+							onclick="saveCsvData()"><i class="im im-plus-circle" aria-hidden="true"></i> Submit Data</button>
+							
+							<button id="removeCsvData" class="ui button danger transparent disabled" type="button"  
+							onclick="resetUpload()">Remove Current Data</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal" id="addPlayerModal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable" role="document">
+		<div class="modal-content">
+
+			<div class="modal-header">
+				<div class="modal-title">Add Player</div>
+				<button type="button" class="close" data-dismiss="modal"><i class="im im-x-mark" aria-hidden="true"></i></button>
+			</div>
+
+			<div class="modal-body">
+				<div class="playerdata-container">
+					<form class="ui form">
+						<div class="field">
+							<label id="requiredNameLabel" class="required">Name Required...</label>
+							<input id="addPlayerName" type="text" placeholder="Name..." oninput="validateAddPlayer()">
+						</div>
+						
+						<div class="field">
+							<label id="requiredPositionLabel" class="required">Position Required...</label>
+							<input id="addPlayerPosition" type="text" placeholder="Position..." oninput="validateAddPlayer()">
+						</div>
+						
+						<div class="field">
+							<label>Salary default 0...</label>
+							<input id="addPlayerSalary" type="number" placeholder="Salary..." oninput="validateAddPlayer()">
+						</div>
+						
+						<div class="field hidden">
+							<label>FPTS default 0...</label>
+							<input id="addPlayerFpts" type="number" placeholder="FPTS..." oninput="validateAddPlayer()">
+						</div>
+
+						<div class="field hidden">
+							<label>Exposure default 100...</label>
+							<input id="addPlayerExposure" type="number" placeholder="Exposure..." oninput="validateAddPlayer()">
+						</div>
+
+						<div class="field">
+							<label>Team required if player has team...</label>
+							<input id="addPlayerTeam" type="text" placeholder="Team..." oninput="validateAddPlayer()">
+						</div>
+
+						<div class="field">
+							<label>Opponent required if player has opponent...</label>
+							<input id="addPlayerOpponent" type="text" placeholder="Opponent..." oninput="validateAddPlayer()">
+						</div>
+						
+						<div class="field">
+							<label>Id column used to export lineups to fantasy site...</label>
+							<input id="addPlayerId" type="text" placeholder="Id..." oninput="validateAddPlayer()">
+						</div>
+
+						<button id="addPlayerBtn" class="ui button rounded primary disabled" type="button" 
+						onclick="addPlayer()"><i class="im im-plus-circle" aria-hidden="true"></i> Submit Player</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal" id="modalMatchData" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+		
+			<div class="modal-header">
+				<div class="modal-title">Match Data</div>
+				<button type="button" class="close" data-dismiss="modal"><i class="im im-x-mark" aria-hidden="true"></i></button>
+			</div>
+	  
+			<div class="modal-body">			
+				<div class="matchdata-container">
+					<div class="info-list">
+						<ul>
+							<li>Use this table to quickly match and replace player data.</li>
+							<li>Name's must match or that player will be skipped.</li>
+							<li>Copy and paste data into the table and validate. Table will grow to fit data.</li>
+							<li>Keyboard controls to paste: 
+								<i class="im im-windows-os" aria-hidden="true"></i> (Ctrl + V) Windows  
+								<i class="im im-apple-os" aria-hidden="true"></i> (Cmd + V) Mac
+							</li>
+						</ul>
+					</div>
+				
+					<div class="matchdata-grid">
+						<div id="uploadprojections"></div>
+					</div>
+				</div>
+				
+				<div class="ui level padded">
+					<div class="item">
+						<button id="validateProjectionsBtn" onclick="validateProjections()" class="ui button rounded primary disabled" type="button"><i class="im im-data-validate" aria-hidden="true"></i> Validate Data</button>							
+					</div>
+					
+					<div class="right">
+						<div class="item">								
+							<button id="clearProjectionsBtn" onclick="clearProjections()" class="ui button danger transparent disabled" type="button">Clear Data</button>	
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+	
+</body>
+<script type="text/javascript" src="../../renderer.js"></script>
+<script type="text/javascript" src="../static/js/vendors/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="../static/js/vendors/ag-grid-community.min.noStyle.js"></script>
+<script type="text/javascript" src="../static/js/vendors/handsontable.min.js"></script>
+<script type="text/javascript" src="../static/js/vendors/MSFmultiSelect.js"></script>
+<script type="text/javascript" src="../static/js/app.js"></script>
+<script type="text/javascript" src="../static/js/settings.js"></script>
+<script type="text/javascript" src="../static/js/stackslimits.js"></script>
+<script type="text/javascript" src="../static/js/playerdata.js"></script>
+<script type="text/javascript" src="../static/js/matchdata.js"></script>
+<script type="text/javascript" src="../static/js/lineups.js"></script>
+</html>
